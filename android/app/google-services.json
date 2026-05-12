@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1058952102629",
+    "project_id": "shake-app-284ac",
+    "storage_bucket": "shake-app-284ac.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1058952102629:android:c4bba24c3db1b78e994a0c",
+        "android_client_info": {
+          "package_name": "jp.co.officees.shake"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBsdky7V_e1zcgfzAqC5BjNUj5U28IKPg8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
