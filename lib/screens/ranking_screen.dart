@@ -253,13 +253,23 @@ class _RankingList extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                intensity.label,
+                intensity.mmiLabel,
                 style: const TextStyle(
                   color: Color(0xFF16A34A),
                   fontWeight: FontWeight.bold,
                   fontSize: 18,
                 ),
               ),
+              if (intensity.jmaLabel != null) ...[
+                const SizedBox(width: 8),
+                Text(
+                  '震度${intensity.jmaLabel}',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
               const SizedBox(width: 12),
               Text(
                 '#$rank',

@@ -64,17 +64,20 @@ class _ResultScreenState extends State<ResultScreen> {
         countryCode: widget.countryCode,
       );
 
-  String get _scaleHashtag =>
-      _intensity.scale == IntensityScale.jma ? '#震度' : '#MMI';
-
   Future<void> _onShare() async {
     final intensity = _intensity;
+    final scoreText = intensity.jmaLabel != null
+        ? 'MMI ${intensity.mmiLabel} / 震度${intensity.jmaLabel}'
+        : 'MMI ${intensity.mmiLabel}';
+    final hashtags = intensity.jmaLabel != null
+        ? '#SHAKE #ShakeToTheWorld #MMI #震度'
+        : '#SHAKE #ShakeToTheWorld #MMI';
     final ok = await ScreenshotShareService.shareWidget(
       boundaryKey: _shareKey,
       text:
-          'I shook the world! ${intensity.label} '
+          'I shook the world! $scoreText '
           '(${widget.acceleration.toStringAsFixed(2)} m/s²) '
-          '🌍 World #${widget.worldRank} #SHAKE #ShakeToTheWorld $_scaleHashtag',
+          '🌍 World #${widget.worldRank} $hashtags',
       filenamePrefix: 'shake_result',
     );
     if (!mounted || ok) return;
@@ -89,8 +92,7 @@ class _ResultScreenState extends State<ResultScreen> {
   @override
   Widget build(BuildContext context) {
     final intensity = _intensity;
-    final scaleLabel =
-        intensity.scale == IntensityScale.jma ? '震度' : 'MMI';
+    const scaleLabel = 'MMI';
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -140,7 +142,7 @@ class _ResultScreenState extends State<ResultScreen> {
                         ),
                       ),
                       Text(
-                        intensity.label,
+                        intensity.mmiLabel,
                         style: const TextStyle(
                           color: Color(0xFF16A34A),
                           fontSize: 96,
@@ -148,6 +150,15 @@ class _ResultScreenState extends State<ResultScreen> {
                           shadows: [Shadow(color: Color(0xFF15803D), blurRadius: 32)],
                         ),
                       ),
+                      if (intensity.jmaLabel != null)
+                        Text(
+                          '震度 ${intensity.jmaLabel}',
+                          style: const TextStyle(
+                            color: Colors.white60,
+                            fontSize: 20,
+                            letterSpacing: 4,
+                          ),
+                        ),
                       Text(
                         '${widget.acceleration.toStringAsFixed(2)} m/s²',
                         style: const TextStyle(

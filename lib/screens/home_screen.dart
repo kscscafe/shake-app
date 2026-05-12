@@ -14,7 +14,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   static const _alphabet =
-      'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 '; // A-Z, 0-9, space
+      'ABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789'; // A-Z, スペース, 0-9
   static const _slotCount = 6;
   final List<int> _indices = List<int>.filled(_slotCount, 0);
 
@@ -57,13 +57,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 fontSize: 12,
               ),
             ),
-            const Spacer(),
+            const Spacer(flex: 1),
             _NicknameEntry(
               alphabet: _alphabet,
               slotCount: _slotCount,
               onChanged: (slot, index) => _indices[slot] = index,
             ),
-            const SizedBox(height: 32),
+            const Spacer(flex: 3),
             _ShakeButton(onPressed: _onShakePressed),
             const SizedBox(height: 16),
             TextButton(
@@ -89,7 +89,8 @@ class _HomeScreenState extends State<HomeScreen> {
 }
 
 /// ニックネーム入力（iOS ピッカー風ドラムロール）。
-class _NicknameEntry extends StatelessWidget {
+/// 各桁は CupertinoPicker の慣性スクロールで A-Z, スペース, 0-9 を選択する。
+class _NicknameEntry extends StatefulWidget {
   const _NicknameEntry({
     required this.alphabet,
     required this.slotCount,
@@ -101,6 +102,23 @@ class _NicknameEntry extends StatelessWidget {
   final void Function(int slot, int index) onChanged;
 
   @override
+  State<_NicknameEntry> createState() => _NicknameEntryState();
+}
+
+class _NicknameEntryState extends State<_NicknameEntry>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _arrowController = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 600),
+  )..repeat(reverse: true);
+
+  @override
+  void dispose() {
+    _arrowController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Column(
       children: [
@@ -109,20 +127,46 @@ class _NicknameEntry extends StatelessWidget {
           style: TextStyle(
             color: Colors.amberAccent,
             letterSpacing: 6,
-            fontSize: 14,
+            fontSize: 24,
+            fontWeight: FontWeight.w900,
+            shadows: [
+              Shadow(color: Colors.amber, blurRadius: 12),
+            ],
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 4),
+        AnimatedBuilder(
+          animation: _arrowController,
+          builder: (_, __) {
+            final t = Curves.easeInOut.transform(_arrowController.value);
+            return Transform.translate(
+              offset: Offset(0, t * 6),
+              child: Opacity(
+                opacity: 0.4 + t * 0.6,
+                child: const Text(
+                  '▼  ▼  ▼',
+                  style: TextStyle(
+                    color: Colors.amberAccent,
+                    letterSpacing: 4,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+        const SizedBox(height: 4),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 8),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              for (int slot = 0; slot < slotCount; slot++)
+              for (int slot = 0; slot < widget.slotCount; slot++)
                 Expanded(
                   child: _SlotPicker(
-                    alphabet: alphabet,
-                    onChanged: (i) => onChanged(slot, i),
+                    alphabet: widget.alphabet,
+                    onChanged: (i) => widget.onChanged(slot, i),
                   ),
                 ),
             ],
@@ -143,13 +187,19 @@ class _SlotPicker extends StatefulWidget {
   State<_SlotPicker> createState() => _SlotPickerState();
 }
 
-class _SlotPickerState extends State<_SlotPicker> {
+class _SlotPickerState extends State<_SlotPicker>
+    with SingleTickerProviderStateMixin {
   late final FixedExtentScrollController _controller =
       FixedExtentScrollController();
+  late final AnimationController _glowController = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1200),
+  )..repeat(reverse: true);
 
   @override
   void dispose() {
     _controller.dispose();
+    _glowController.dispose();
     super.dispose();
   }
 
@@ -160,18 +210,35 @@ class _SlotPickerState extends State<_SlotPicker> {
       child: Stack(
         alignment: Alignment.center,
         children: [
+          // ハイライト枠（中央のセルに重ねる・パルス発光）
           IgnorePointer(
-            child: Container(
-              height: 44,
-              margin: const EdgeInsets.symmetric(horizontal: 2),
-              decoration: BoxDecoration(
-                border: Border(
-                  top: BorderSide(
-                      color: Colors.amberAccent.withValues(alpha: 0.5)),
-                  bottom: BorderSide(
-                      color: Colors.amberAccent.withValues(alpha: 0.5)),
-                ),
-              ),
+            child: AnimatedBuilder(
+              animation: _glowController,
+              builder: (_, __) {
+                final t = Curves.easeInOut.transform(_glowController.value);
+                final alpha = 0.3 + t * 0.7;
+                return Container(
+                  height: 44,
+                  margin: const EdgeInsets.symmetric(horizontal: 2),
+                  decoration: BoxDecoration(
+                    border: Border(
+                      top: BorderSide(
+                          color: Colors.amberAccent.withValues(alpha: alpha),
+                          width: 1.5),
+                      bottom: BorderSide(
+                          color: Colors.amberAccent.withValues(alpha: alpha),
+                          width: 1.5),
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.amberAccent
+                            .withValues(alpha: alpha * 0.4),
+                        blurRadius: 8,
+                      ),
+                    ],
+                  ),
+                );
+              },
             ),
           ),
           CupertinoPicker(
@@ -183,6 +250,8 @@ class _SlotPickerState extends State<_SlotPicker> {
             diameterRatio: 1.2,
             backgroundColor: Colors.transparent,
             selectionOverlay: const SizedBox.shrink(),
+            // 両方向に無限ループ。A から上スワイプでスペース、下スワイプで B も可
+            looping: true,
             onSelectedItemChanged: widget.onChanged,
             children: [
               for (final c in widget.alphabet.split(''))

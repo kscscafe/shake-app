@@ -2,36 +2,50 @@
 ///
 /// 仕様書「3. 計測仕様」のテーブルをそのまま実装する。
 /// ランキングでは加速度の生値で並べ、表示時にここで国別フォーマットへ変換する。
+/// 表示は常に MMI を主スケールとし、JP の場合は震度を併記する。
 library;
 
 enum IntensityScale { jma, mmi }
 
 class Intensity {
-  const Intensity({required this.scale, required this.label});
+  const Intensity({
+    required this.scale,
+    required this.mmiLabel,
+    this.jmaLabel,
+  });
 
+  /// 計測者の所属国による分類。JP のみ jma、それ以外は mmi。
   final IntensityScale scale;
 
-  /// 画面に表示するラベル。日本: "5弱"、海外: "Ⅵ" など。
-  final String label;
+  /// 主表示用の MMI ラベル（"Ⅵ" など）。常に値あり。
+  final String mmiLabel;
+
+  /// JP の場合のみ非 null。震度ラベル（"5弱" など）。
+  final String? jmaLabel;
+
+  /// 後方互換: 旧 API。常に MMI ラベルを返す。
+  String get label => mmiLabel;
 }
 
 class IntensityConverter {
   IntensityConverter._();
 
-  /// [countryCode] が 'JP' なら震度、それ以外は MMI に換算する。
+  /// [countryCode] が 'JP' なら MMI と震度の両方を、それ以外は MMI のみを返す。
   static Intensity fromAcceleration({
     required double acceleration,
     required String countryCode,
   }) {
+    final mmi = _mmiLabel(acceleration);
     if (countryCode.toUpperCase() == 'JP') {
       return Intensity(
         scale: IntensityScale.jma,
-        label: _jmaLabel(acceleration),
+        mmiLabel: mmi,
+        jmaLabel: _jmaLabel(acceleration),
       );
     }
     return Intensity(
       scale: IntensityScale.mmi,
-      label: _mmiLabel(acceleration),
+      mmiLabel: mmi,
     );
   }
 
