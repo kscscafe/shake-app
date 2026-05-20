@@ -1,0 +1,17 @@
+name: Supabase Keep Alive
+
+on:
+  schedule:
+    - cron: '0 0 * * 0'  # 毎週日曜0時（UTC）
+  workflow_dispatch:  # 手動実行も可能
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Supabase rankings
+        run: |
+          curl -s "https://hvcyxbvgwedbmkhvezst.supabase.co/rest/v1/rankings?limit=1" \
+            -H "apikey: ${{ secrets.SHAKE_SUPABASE_ANON_KEY }}" \
+            -H "Authorization: Bearer ${{ secrets.SHAKE_SUPABASE_ANON_KEY }}"
+          echo "Ping done"
