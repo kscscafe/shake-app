@@ -3,6 +3,7 @@ name: Supabase Keep Alive
 on:
   schedule:
     - cron: '0 0 * * 0'  # 毎週日曜0時（UTC）
+    - cron: '0 0 * * 4'
   workflow_dispatch:  # 手動実行も可能
 
 jobs:
